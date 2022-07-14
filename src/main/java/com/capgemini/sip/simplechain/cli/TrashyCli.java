@@ -12,12 +12,24 @@ import java.io.InputStreamReader;
  * skip defensive coding for now.
  */
 public class TrashyCli {
+
   private static class BlockchainNotInitializedException extends RuntimeException {}
 
   private final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
   private BlockchainExplorer explorer;
   private Exchange exchange;
   private boolean isInit = false;
+
+  public TrashyCli(Blockchain blockchain) {
+    this.exchange = new Exchange(blockchain);
+    this.explorer = new BlockchainExplorer(blockchain);
+    isInit = true;
+  }
+
+  public TrashyCli() {
+    isInit = false;
+  }
+
 
   private String prompt() {
     System.out.print("> ");
@@ -31,11 +43,24 @@ public class TrashyCli {
   }
 
   private void help() {}
+  private void checkInit() {
+    if (!isInit) {
+      throw new BlockchainNotInitializedException();
+    }
+  }
+  private void sendNow(String from, String to, long amount) {
+    checkInit();
+    // TODO: Maybe create multi-transactional blocks?
+    if (exchange.sendNow(from, to, amount)) {
+      System.out.printf("Sent %d from %s to %s\n", amount, from, to);
+    } else {
+      System.out.println("Cannot perform transaction");
+    }
+  }
 
   private void send(String from, String to, long amount) {
     checkInit();
-    // TODO: Maybe create multi-transactional blocks?
-    if (exchange.oneTransactionBlock(from, to, amount)) {
+    if (exchange.send(from, to, amount)) {
       System.out.printf("Sent %d from %s to %s\n", amount, from, to);
     } else {
       System.out.println("Cannot perform transaction");
@@ -54,79 +79,34 @@ public class TrashyCli {
       System.out.printf("Cannot read from %s\n", fromWhere);
     }
   }
-
-  public void loop() {
-    while (true) {
-      try {
-        String p = prompt();
-
-        String[] args = p.split("\\s+");
-
-        switch (args[0]) {
-          default:
-          case "help":
-            help();
-            break;
-
-          case "load":
-            String fromWhere = args[1];
-            load(fromWhere);
-            break;
-          case "save":
-            String dest = args[1];
-            save(dest);
-            break;
-          case "init":
-            init();
-            break;
-          case "send":
-            String from = args[1];
-            String to = args[2];
-            long amount = Long.parseLong(args[3]);
-            send(from, to, amount);
-            break;
-          case "byhash":
-            String hash = args[1];
-            byHash(hash);
-            break;
-          case "byheight":
-            try {
-              int h = Integer.parseInt(args[1]);
-              byheight(h);
-            } catch (NumberFormatException e) {
-              System.out.println("Specify correct number!");
-            }
-            break;
-          case "length":
-            length();
-            break;
-          case "last":
-            last();
-            break;
-          case "balance":
-            String balanceAddr = args[1];
-            balance(balanceAddr);
-            break;
-          case "tx":
-            String txAddr = args[1];
-            tx(txAddr);
-        }
-      } catch (BlockchainNotInitializedException ex) {
-        System.out.println("Blokchain not initalized!");
-      }
+  private void save(String dest) {
+    checkInit();
+    try {
+      JsonUtils.saveToFile(this.exchange.getBlockchain(), dest);
+      isInit = true;
+    } catch (IOException ex) {
+      System.out.printf("Cannot save to %s\n", dest);
     }
   }
+
+  private void init() {
+    Blockchain blockchain = Blockchain.createSampleBlockchain();
+    this.explorer = new BlockchainExplorer(blockchain);
+    this.exchange = new Exchange(blockchain);
+    System.out.println("Initialized new blockchain");
+    isInit = true;
+  }
+
+
+
+
 
   private void tx(String addr) {
     checkInit();
     System.out.println(explorer.history(addr));
   }
 
-  private void checkInit() {
-    if (!isInit) {
-      throw new BlockchainNotInitializedException();
-    }
-  }
+
 
   private void balance(String addr) {
     checkInit();
@@ -155,31 +135,114 @@ public class TrashyCli {
     System.out.println(response);
   }
 
-  private void init() {
-    Blockchain blockchain = Blockchain.createSampleBlockchain();
-    this.explorer = new BlockchainExplorer(blockchain);
-    this.exchange = new Exchange(blockchain);
-    System.out.println("Initialized new blockchain");
-    isInit = true;
-  }
 
-  private void save(String dest) {
-    checkInit();
-    try {
-      JsonUtils.saveToFile(this.exchange.getBlockchain(), dest);
-      isInit = true;
-    } catch (IOException ex) {
-      System.out.printf("Cannot save to %s\n", dest);
+
+
+
+  public void loop() {
+    while (true) {
+      try {
+        String p = prompt();
+
+        String[] args = p.split("\\s+");
+
+        switch (args[0]) {
+          default:
+          case "help":
+            help();
+            break;
+
+          case "load":
+            if (args.length != 2) {
+              System.out.println("usage: load [path to file]");
+              continue;
+            }
+            String fromWhere = args[1];
+            load(fromWhere);
+            break;
+          case "save":
+            if (args.length != 2) {
+              System.out.println("usage: save [path to file]");
+              continue;
+            }
+            String dest = args[1];
+            save(dest);
+            break;
+          case "init":
+            init();
+            break;
+          case "sendnow":
+            if (args.length != 4) {
+              System.out.println("usage: sendnow [from] [to] [amount]");
+              continue;
+            }
+            String from = args[1];
+            String to = args[2];
+            try {
+              long amount = Long.parseLong(args[3]);
+              sendNow(from, to, amount);
+            } catch (NumberFormatException ex) {
+              System.out.println("Specify correct number!");
+            }
+            break;
+          case "send":
+            if (args.length != 4) {
+              System.out.println("usage: send [from] [to] [amount]");
+              continue;
+            }
+            String fromProperly = args[1];
+            String toProperly = args[2];
+            try {
+              long amountProperly = Long.parseLong(args[3]);
+              send(fromProperly, toProperly, amountProperly);
+            } catch (NumberFormatException ex) {
+              System.out.println("Specify correct number!");
+            }
+            break;
+          case "commit":
+            exchange.commit();
+            break;
+          case "byhash":
+            String hash = args[1];
+            byHash(hash);
+            break;
+          case "byheight":
+            try {
+              int h = Integer.parseInt(args[1]);
+              byheight(h);
+            } catch (NumberFormatException e) {
+              System.out.println("Specify correct number!");
+            }
+            break;
+          case "length":
+            length();
+            break;
+          case "last":
+            last();
+            break;
+          case "balance":
+            if (args.length != 2) {
+              System.out.println("usage: balance [address]");
+              continue;
+            }
+            String balanceAddr = args[1];
+            balance(balanceAddr);
+            break;
+          case "tx":
+            if (args.length != 2) {
+              System.out.println("usage: tx [address]");
+            }
+            String txAddr = args[1];
+            tx(txAddr);
+            break;
+          case "exit":
+          case "quit":
+            System.exit(0);
+            break;
+        }
+      } catch (BlockchainNotInitializedException ex) {
+        System.out.println("Blokchain not initalized!");
+      }
     }
-  }
-
-  public TrashyCli(Blockchain blockchain) {
-    this.exchange = new Exchange(blockchain);
-    this.explorer = new BlockchainExplorer(blockchain);
-    isInit = true;
-  }
-
-  public TrashyCli() {
-    isInit = false;
   }
 }

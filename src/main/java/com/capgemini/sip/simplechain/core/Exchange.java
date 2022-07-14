@@ -23,14 +23,37 @@ public class Exchange {
     currentBlock = new Block(blockchain.getHead().hash());
   }
 
-  public boolean oneTransactionBlock(@NonNull String from, @NonNull String to, long amount) {
-    if (currentBlock.hasTransactions()) {
-      commitCurrentBlock();
-      resetCurrentBlock();
+  public boolean canTransact(Transaction tx) {
+    String from = tx.getFrom();
+    long amount = tx.getAmount();
+
+    return tx.isValid() && hasEnoughCoins(from, amount);
+  }
+
+  public boolean send(@NonNull String from, @NonNull String to, long amount) {
+    var tx = new Transaction(from, to, amount);
+    if (!canTransact(tx)) {
+      return false;
     }
 
+    currentBlock.addTransaction(tx);
+    updateCache(tx);
+    var transactions = currentBlock.getTransactions();
+    if (transactions.size() == Block.MAX_TRANSACTIONS) {
+      commitCurrentBlock();
+      resetCurrentBlock();
+
+    }
+
+    return true;
+  }
+
+
+  public boolean sendNow(@NonNull String from, @NonNull String to, long amount) {
+
+
     var tx = new Transaction(from, to, amount);
-    if (!tx.isValid() || !hasEnoughCoins(from, amount)) {
+    if (!canTransact(tx)) {
       return false;
     }
     currentBlock.addTransaction(tx);
@@ -40,7 +63,7 @@ public class Exchange {
     return true;
   }
 
-  public boolean commitCurrentBlock() {
+  private boolean commitCurrentBlock() {
     if (!currentBlock.isValid()) {
       return false;
     }
@@ -48,23 +71,7 @@ public class Exchange {
     return true;
   }
 
-  public boolean transact(@NonNull String from, @NonNull String to, long amount) {
-    var tx = new Transaction(from, to, amount);
 
-    if (!tx.isValid() || !hasEnoughCoins(from, amount)) {
-      return false;
-    }
-
-    currentBlock.addTransaction(tx);
-
-    if (currentBlock.getTransactions().size() == Block.MAX_TRANSACTIONS) {
-      commitCurrentBlock();
-      resetCurrentBlock();
-    }
-
-    updateCache(tx);
-    return true;
-  }
 
   private boolean hasEnoughCoins(String from, long amount) {
 
@@ -76,20 +83,19 @@ public class Exchange {
     String from = tx.getFrom();
     long amount = tx.getAmount();
 
-    if (balanceCache.containsKey(from)) {
-      long oldBalance = balanceCache.get(from);
 
-      balanceCache.put(from, oldBalance - amount);
-    } else {
+    if (!balanceCache.containsKey(from)) {
       addToCache(from);
     }
+    long oldFromBalance = balanceCache.get(from);
+    balanceCache.put(from, oldFromBalance - amount);
 
-    if (balanceCache.containsKey(to)) {
-      long oldBalance = balanceCache.get(to);
-      balanceCache.put(to, oldBalance + amount);
-    } else {
+    if (!balanceCache.containsKey(to)) {
       addToCache(to);
     }
+
+    long oldToBalance = balanceCache.get(to);
+    balanceCache.put(to, oldToBalance + amount);
   }
 
   private long getBalance(String addr) {
@@ -117,5 +123,10 @@ public class Exchange {
 
   private void resetCurrentBlock() {
     currentBlock = new Block(blockchain.getHead().hash());
+  }
+
+  public void commit() {
+    commitCurrentBlock();
+    resetCurrentBlock();
   }
 }
