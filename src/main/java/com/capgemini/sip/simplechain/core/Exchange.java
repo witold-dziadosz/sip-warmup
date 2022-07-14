@@ -1,6 +1,7 @@
 package com.capgemini.sip.simplechain.core;
 
 import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -10,7 +11,7 @@ public class Exchange {
    * I decided that it is the Exchange's job to prevent you from spending more money than you've got
    * *
    */
-  private HashMap<String, Long> balanceCache = new HashMap<>();
+  private Map<String, Long> balanceCache = new HashMap<String, Long>();
 
   private final @Getter Blockchain blockchain;
   private @Getter Block currentBlock;
