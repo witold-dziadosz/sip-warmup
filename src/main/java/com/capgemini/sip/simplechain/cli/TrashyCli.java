@@ -13,6 +13,18 @@ import java.io.InputStreamReader;
  */
 public class TrashyCli {
 
+  private static final String SENDNOW_USAGE = "sendnow [from] [to] [amount]";
+  private static final String SEND_USAGE = "send [from] [to] [amount]";
+
+  private static final String LOAD_USAGE = "load [path to file]";
+  private static final String SAVE_USAGE = "save [path to file]";
+
+  private static final String BYHASH_USAGE = "byhash [hash]";
+  private static final String BYHEIGHT_USAGE = "byheight [height]";
+
+  private static final String BALANCE_USAGE = "balance [address]";
+  private static final String TX_USAGE = "tx [address]";
+
   private static class BlockchainNotInitializedException extends RuntimeException {}
 
   private final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -30,7 +42,6 @@ public class TrashyCli {
     isInit = false;
   }
 
-
   private String prompt() {
     System.out.print("> ");
 
@@ -42,12 +53,30 @@ public class TrashyCli {
     }
   }
 
-  private void help() {}
+  private void help() {
+    System.out.println("Simplechain: ");
+    System.out.println("init :: create new blockchain");
+    System.out.println(SENDNOW_USAGE + " :: send money instantly");
+    System.out.println(SEND_USAGE + " :: add tx to block");
+    System.out.println("commit :: add current block to blockchain");
+    System.out.println(LOAD_USAGE + " load bchain from JSON");
+    System.out.println(SAVE_USAGE + " save bchain to JSON");
+    System.out.println("length :: length of the blockchain");
+    System.out.println("last :: last accepted block");
+    System.out.println(BYHASH_USAGE + " :: get info about block");
+    System.out.println(BYHEIGHT_USAGE + " :: get info about block");
+    System.out.println(BALANCE_USAGE + " :: get account balance");
+    System.out.println(TX_USAGE + " :: account's transaction history");
+    System.out.println("exit :: terminate program");
+    System.out.println("quit :: terminate program");
+  }
+
   private void checkInit() {
     if (!isInit) {
       throw new BlockchainNotInitializedException();
     }
   }
+
   private void sendNow(String from, String to, long amount) {
     checkInit();
     // TODO: Maybe create multi-transactional blocks?
@@ -79,6 +108,7 @@ public class TrashyCli {
       System.out.printf("Cannot read from %s\n", fromWhere);
     }
   }
+
   private void save(String dest) {
     checkInit();
     try {
@@ -97,16 +127,10 @@ public class TrashyCli {
     isInit = true;
   }
 
-
-
-
-
   private void tx(String addr) {
     checkInit();
     System.out.println(explorer.history(addr));
   }
-
-
 
   private void balance(String addr) {
     checkInit();
@@ -135,11 +159,13 @@ public class TrashyCli {
     System.out.println(response);
   }
 
+  public void run() {
+    System.out.println(logo);
+    System.out.println("Stuck? Try typing `help`");
+    loop();
+  }
 
-
-
-
-  public void loop() {
+  private void loop() {
     while (true) {
       try {
         String p = prompt();
@@ -154,7 +180,7 @@ public class TrashyCli {
 
           case "load":
             if (args.length != 2) {
-              System.out.println("usage: load [path to file]");
+              System.out.println("usage: " + LOAD_USAGE);
               continue;
             }
             String fromWhere = args[1];
@@ -162,7 +188,7 @@ public class TrashyCli {
             break;
           case "save":
             if (args.length != 2) {
-              System.out.println("usage: save [path to file]");
+              System.out.println("usage :" + SAVE_USAGE);
               continue;
             }
             String dest = args[1];
@@ -173,7 +199,7 @@ public class TrashyCli {
             break;
           case "sendnow":
             if (args.length != 4) {
-              System.out.println("usage: sendnow [from] [to] [amount]");
+              System.out.println("usage: " + SENDNOW_USAGE);
               continue;
             }
             String from = args[1];
@@ -187,7 +213,7 @@ public class TrashyCli {
             break;
           case "send":
             if (args.length != 4) {
-              System.out.println("usage: send [from] [to] [amount]");
+              System.out.println("usage: " + SEND_USAGE);
               continue;
             }
             String fromProperly = args[1];
@@ -203,10 +229,17 @@ public class TrashyCli {
             exchange.commit();
             break;
           case "byhash":
+            if (args.length != 2) {
+              System.out.println("usage: " + BYHASH_USAGE);
+              continue;
+            }
             String hash = args[1];
             byHash(hash);
             break;
           case "byheight":
+            if (args.length != 2) {
+              System.out.println("usage: " + BYHEIGHT_USAGE);
+            }
             try {
               int h = Integer.parseInt(args[1]);
               byheight(h);
@@ -222,7 +255,7 @@ public class TrashyCli {
             break;
           case "balance":
             if (args.length != 2) {
-              System.out.println("usage: balance [address]");
+              System.out.println("usage: " + BALANCE_USAGE);
               continue;
             }
             String balanceAddr = args[1];
@@ -230,13 +263,15 @@ public class TrashyCli {
             break;
           case "tx":
             if (args.length != 2) {
-              System.out.println("usage: tx [address]");
+              System.out.println("usage: " + TX_USAGE);
+              continue;
             }
             String txAddr = args[1];
             tx(txAddr);
             break;
           case "exit":
           case "quit":
+            System.out.println("Bye.");
             System.exit(0);
             break;
         }
@@ -245,4 +280,31 @@ public class TrashyCli {
       }
     }
   }
+
+  static final String logo =
+      "\n"
+          + "  ______   ______  __       __  _______   __        ________         ______   __   "
+          + " __   ______   ______  __    __ \n"
+          + " /      \\ |      \\|  \\     /  \\|       \\ |  \\      |        \\       /      \\"
+          + " |  \\  |  \\ /      \\ |      \\|  \\  |  \\\n"
+          + "|  $$$$$$\\ \\$$$$$$| $$\\   /  $$| $$$$$$$\\| $$      | $$$$$$$$      |  $$$$$$\\|"
+          + " $$  | $$|  $$$$$$\\ \\$$$$$$| $$\\ | $$\n"
+          + "| $$___\\$$  | $$  | $$$\\ /  $$$| $$__/ $$| $$      | $$__          | $$   \\$$|"
+          + " $$__| $$| $$__| $$  | $$  | $$$\\| $$\n"
+          + " \\$$    \\   | $$  | $$$$\\  $$$$| $$    $$| $$      | $$  \\         | $$      |"
+          + " $$    $$| $$    $$  | $$  | $$$$\\ $$\n"
+          + " _\\$$$$$$\\  | $$  | $$\\$$ $$ $$| $$$$$$$ | $$      | $$$$$         | $$   __ |"
+          + " $$$$$$$$| $$$$$$$$  | $$  | $$\\$$ $$\n"
+          + "|  \\__| $$ _| $$_ | $$ \\$$$| $$| $$      | $$_____ | $$_____       | $$__/  \\| $$"
+          + "  | $$| $$  | $$ _| $$_ | $$ \\$$$$\n"
+          + " \\$$    $$|   $$ \\| $$  \\$ | $$| $$      | $$     \\| $$     \\       \\$$    $$|"
+          + " $$  | $$| $$  | $$|   $$ \\| $$  \\$$$\n"
+          + "  \\$$$$$$  \\$$$$$$ \\$$      \\$$ \\$$       \\$$$$$$$$ \\$$$$$$$$        \\$$$$$$"
+          + "  \\$$   \\$$ \\$$   \\$$ \\$$$$$$ \\$$   \\$$\n"
+          + "                                                                                    "
+          + "                               \n"
+          + "                                                                                    "
+          + "                               \n"
+          + "                                                                                    "
+          + "                               \n";
 }

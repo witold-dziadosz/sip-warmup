@@ -42,15 +42,12 @@ public class Exchange {
     if (transactions.size() == Block.MAX_TRANSACTIONS) {
       commitCurrentBlock();
       resetCurrentBlock();
-
     }
 
     return true;
   }
 
-
   public boolean sendNow(@NonNull String from, @NonNull String to, long amount) {
-
 
     var tx = new Transaction(from, to, amount);
     if (!canTransact(tx)) {
@@ -71,8 +68,6 @@ public class Exchange {
     return true;
   }
 
-
-
   private boolean hasEnoughCoins(String from, long amount) {
 
     return getBalance(from) >= amount;
@@ -82,7 +77,6 @@ public class Exchange {
     String to = tx.getTo();
     String from = tx.getFrom();
     long amount = tx.getAmount();
-
 
     if (!balanceCache.containsKey(from)) {
       addToCache(from);
