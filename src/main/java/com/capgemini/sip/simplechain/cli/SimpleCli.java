@@ -11,7 +11,7 @@ import java.io.InputStreamReader;
  * This class does not implement any user input validation. This is just a warmup task, so let's
  * skip defensive coding for now.
  */
-public class TrashyCli {
+public class SimpleCli {
 
   private static final String SENDNOW_USAGE = "sendnow [from] [to] [amount]";
   private static final String SEND_USAGE = "send [from] [to] [amount]";
@@ -32,13 +32,13 @@ public class TrashyCli {
   private Exchange exchange;
   private boolean isInit = false;
 
-  public TrashyCli(Blockchain blockchain) {
+  public SimpleCli(Blockchain blockchain) {
     this.exchange = new Exchange(blockchain);
     this.explorer = new BlockchainExplorer(blockchain);
     isInit = true;
   }
 
-  public TrashyCli() {
+  public SimpleCli() {
     isInit = false;
   }
 
@@ -147,7 +147,7 @@ public class TrashyCli {
     System.out.println(explorer.length());
   }
 
-  private void byheight(int h) {
+  private void byHeight(int h) {
     checkInit();
     System.out.println(explorer.blockDetailsByHeight(h));
   }
@@ -242,7 +242,7 @@ public class TrashyCli {
             }
             try {
               int h = Integer.parseInt(args[1]);
-              byheight(h);
+              byHeight(h);
             } catch (NumberFormatException e) {
               System.out.println("Specify correct number!");
             }

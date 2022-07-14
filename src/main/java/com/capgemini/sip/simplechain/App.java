@@ -1,9 +1,9 @@
 package com.capgemini.sip.simplechain;
 
-import com.capgemini.sip.simplechain.cli.TrashyCli;
+import com.capgemini.sip.simplechain.cli.SimpleCli;
 
 public class App {
   public static void main(String[] args) {
-    new TrashyCli().run();
+    new SimpleCli().run();
   }
 }
