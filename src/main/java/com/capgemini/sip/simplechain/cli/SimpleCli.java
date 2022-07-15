@@ -9,7 +9,7 @@ import java.io.InputStreamReader;
 
 /**
  * This class does not implement any user input validation. This is just a warmup task, so let's
- * skip defensive coding for now.
+ * skip defensive coding for now. Well it now kinda does.
  */
 public class SimpleCli {
 
@@ -79,7 +79,7 @@ public class SimpleCli {
 
   private void sendNow(String from, String to, long amount) {
     checkInit();
-    // TODO: Maybe create multi-transactional blocks?
+
     if (exchange.sendNow(from, to, amount)) {
       System.out.printf("Sent %d from %s to %s\n", amount, from, to);
     } else {
