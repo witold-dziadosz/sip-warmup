@@ -29,7 +29,7 @@ public class Block {
     transactions.add(tx);
   }
 
-  public void addAllTransactions(Collection<Transaction> txs) {
+  public void addAllTransactions(@NonNull Collection<Transaction> txs) {
     transactions.addAll(txs);
   }
 
