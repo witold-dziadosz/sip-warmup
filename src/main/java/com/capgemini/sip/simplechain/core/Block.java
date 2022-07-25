@@ -92,9 +92,9 @@ public class Block {
 
   @JsonIgnore
   public boolean isGenesis() {
-    return prevHash == GENESIS_PREV_HASH
+    return prevHash.equals(GENESIS_PREV_HASH)
         && transactions.size() == 1
-        && getLastTransaction().getFrom() == GENESIS_FROM;
+        && getLastTransaction().getFrom().equals(GENESIS_FROM);
   }
 
   public boolean hasTransactions() {
