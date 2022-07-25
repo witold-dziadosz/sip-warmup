@@ -12,7 +12,7 @@ import lombok.NonNull;
 @Data
 @NoArgsConstructor
 public class Blockchain {
-  private static final String SAMPLE_BLOCKCHAIN_OWNER_ADDRESS = "YOU";
+  private static final String SAMPLE_BLOCKCHAIN_OWNER_ADDRESS = "OWNER";
   private static final long SAMPLE_BLOCKCHAIN_AMOUNT = 50000;
   private List<Block> blocks = new ArrayList<>();
 
